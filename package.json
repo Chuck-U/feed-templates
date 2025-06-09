@@ -1,0 +1,22 @@
+{
+  "name": "feed-templates",
+  "packageManager": "yarn@4.9.1",
+  "author": "Chuck Peters",
+  "license": "MIT",
+  "version": "0.0.1",
+  "description": "A simple feed construction library for allowing customizable item feeds",
+  "main": "index.ts",
+  "scripts": {
+    "buildtest": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "eslint": "^9.28.0",
+    "prettier": "^3.5.3"
+  }
+}
