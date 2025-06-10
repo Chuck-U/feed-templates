@@ -9,8 +9,7 @@
         "eslint:recommended",
         "plugin:@typescript-eslint/recommended",
         "plugin:react/recommended",
-        "prettier",
-        "plugin:tailwindcss/recommended"
+        "prettier"
       ],  
       "plugins": ["@typescript-eslint", "import"],
       "parser": "@typescript-eslint/parser",
@@ -20,5 +19,25 @@
   },
   "rules": {
     "indent": "off",
+    "no-self-assign": "error",
+    "no-fallthrough": "error",
+    "no-duplicate-case": "error",
+    "no-redeclare": "error",
+    "no-unsafe-optional-chaining": "error",
+    "no-dupe-keys": "error",
+    "no-undef": "error",
+    "no-empty": "error",
+    "no-unreachable": "error",
+    "no-empty-pattern": "error"
+  },
+  "import/resolver": {
+    "node": {
+      "paths": ["src"],
+      "extensions": [".js", ".jsx", ".ts", ".tsx"]
+    },
+    "alias": {
+      "map": [["@", "./src"]],
+      "extensions": [".js", ".jsx", ".ts", ".tsx"]
+    }
   }
 }

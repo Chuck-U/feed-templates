@@ -1,29 +1,22 @@
 import {
-    Center,
-    CenterFeedPlacement,
     FeedOptions,
     FeedProperty,
-    ScoringData,
     FeedItemEnum,
-    FeedItems
-  } from '@/types/models'
+    FeedItems,
+    FeedPlacement,
+    Item
+  } from '../types/feed.model'
   import { getLocalBlockLengthFromFeedLayout } from '@/domain/feed/useCases/getLocalAdBlock'
-  import { isNil, isNonEmptyArray, isNumber } from '@/utils/checks'
+  import { isNonEmptyArray, isNumber } from '../utils/checks'
   import {
     addSingleItemsAtPosition,
     sortConstructedFeed
-  } from './addSingleItemsAtPosition'
+  } from './useCases/addSingleItemsAtPosition'
   import { singleInserts, MAX_CAROUSEL_FEED_ITEMS } from './constants'
-  import {
-    addAdsTypeAndZoneId,
-    addLocalFeedTypeAndZoneId,
-    addNearbyFeedTypeAndZoneId,
-    addOrganicFeedTypeAndZoneId,
-    addFeaturedFeedTypeAndZoneId
-  } from '../center/useCases/addFeedTypeAndZoneId'
+
   import { createLocalCenters } from './useCases/createLocalCenters'
   import { removePriorityItemsFromCenters } from './useCases/dedupeCentersByPriority'
-  import { AddItemsToSubFeed } from './useCases/AddItemsToSubFeed'
+  import { AddItemsToSubFeed } from './useCases/mixInSubfeed'
   import { addNearbyHeader } from './useCases/addNearbyHeader'
   import { getRepeatPatternSubItemCount } from './useCases/getRepeatPatternSubItemCount'
   
@@ -33,93 +26,77 @@ import {
   
   export const addComponentsToFeed = ({
     feedLayout,
-    localFeed,
+    topFeed,
     organicFeed,
-    nearbyFeed,
-    midFeedAds,
-    carouselFeaturedCenters,
-    scoringData
+    featuredFeed,
+    adverts,
   }: {
     feedLayout: FeedProperty[]
-    localFeed: CenterFeedPlacement[] | []
-    organicFeed: CenterFeedPlacement[] | []
-    nearbyFeed: CenterFeedPlacement[] | []
-    midFeedAds: CenterFeedPlacement[] | []
-    carouselFeaturedCenters: CenterFeedPlacement[]
-    scoringData: ScoringData
+    topFeed: FeedPlacement[] | []
+    organicFeed: FeedPlacement[] | []
+    featuredFeed: FeedPlacement[] | []
+    adverts: FeedPlacement[] | []
   }) => {
-    let localCenters: CenterFeedPlacement[] = localFeed
-    let organicCenters: CenterFeedPlacement[] = organicFeed
-    let adverts: CenterFeedPlacement[] = midFeedAds
-    let featured: CenterFeedPlacement[] = carouselFeaturedCenters
-    if (getLocalBlockLengthFromFeedLayout(feedLayout)) {
-      localCenters = createLocalCenters({
-        organicCenters: organicCenters,
-        scoringData,
-        localBlockCount: getLocalBlockLengthFromFeedLayout(feedLayout)
-      })
-      organicCenters = removePriorityItemsFromCenters({
-        listWithPriority: localCenters,
-        listToRemoveFrom: organicCenters
-      }) as CenterFeedPlacement[]
-    }
+    let topItems: FeedPlacement[] = topFeed
+    let organicItems: FeedPlacement[] = organicFeed
+    let advertsItems: FeedPlacement[] = adverts
+    let featuredItems: FeedPlacement[] = featuredFeed
+
     adverts = removePriorityItemsFromCenters({
-      listWithPriority: [...organicCenters, ...localCenters],
+      listWithPriority: [...organicItems, ...topItems],
       listToRemoveFrom: adverts
-    }) as CenterFeedPlacement[]
-    featured = removePriorityItemsFromCenters({
-      listWithPriority: [...organicCenters, ...localCenters],
-      listToRemoveFrom: featured
-    }) as CenterFeedPlacement[]
+    }) as FeedPlacement[]
+    featuredItems = removePriorityItemsFromCenters({
+      listWithPriority: [...organicItems, ...topItems],
+      listToRemoveFrom: featuredItems
+    }) as FeedPlacement[]
   
     const initialFeed = createInitialFeed({
       feedLayout,
-      localFeed: localCenters,
-      organicFeed: organicCenters,
-      nearbyFeed,
-      midFeedAds: adverts,
-      carouselFeaturedCenters: featured
+      topFeed: topItems,
+      organicFeed: organicItems,
+      featuredFeed: featuredItems,
+      adverts: advertsItems,
+      carouselFeaturedCenters: featuredItems
     })
   
     const constructedFeed = addSingleItemsAtPosition({
-      feed: initialFeed as Partial<CenterFeedPlacement>[],
+      feed: initialFeed as Partial<FeedPlacement>[],
       template: feedLayout
     })
-    if (nearbyFeed.length) {
+    if (featuredFeed.length) {
       const nearbyConstructedFeed = addNearbyHeader({
         feed: constructedFeed
       })
-      return sortConstructedFeed(nearbyConstructedFeed as CenterFeedPlacement[])
+      return sortConstructedFeed(nearbyConstructedFeed as FeedPlacement[])
     }
   
-    return sortConstructedFeed(constructedFeed as CenterFeedPlacement[])
+    return sortConstructedFeed(constructedFeed as FeedPlacement[])
   }
   
   export const createInitialFeed = ({
     feedLayout,
-    localFeed = [],
+    topFeed = [],
     organicFeed = [],
-    nearbyFeed = [],
-    midFeedAds = [],
+    featuredFeed = [],
+    adverts = [],
     carouselFeaturedCenters = []
   }: {
     feedLayout: FeedProperty[]
-    localFeed: Center[] | []
-    organicFeed: Center[] | []
-    nearbyFeed: Center[] | []
-    midFeedAds: Center[] | []
-    carouselFeaturedCenters: Center[] | []
+    topFeed: Item[] | []
+    organicFeed: Item[] | []
+    featuredFeed: Item[] | []
+    adverts: Item[] | []
+    carouselFeaturedCenters: Item[] | []
   }) => {
-    const localItems = localFeed.map(addLocalFeedTypeAndZoneId)
-    const midFeedAdsItems = midFeedAds.map(addAdsTypeAndZoneId)
-    const organicItems = organicFeed.map(addOrganicFeedTypeAndZoneId)
-    const nearbyItems = nearbyFeed.map(addNearbyFeedTypeAndZoneId)
-    const featuredItems = carouselFeaturedCenters.map(
-      addFeaturedFeedTypeAndZoneId
-    )
+    const topItems = topFeed
+    const advertItems = adverts
+    const organicItems = organicFeed
+    const nearbyItems = featuredFeed
+    const featuredItems = carouselFeaturedCenters
     const feedItems = {
-      localItems,
-      midFeedAdsItems,
+      topItems,
+      advertItems,
       organicItems,
       nearbyItems,
       featuredItems
@@ -136,21 +113,6 @@ import {
         if (singleInserts.includes(feedType)) {
           return []
         }
-        if (item.feedType === FeedOptions.Explore) {
-          return { ...item, feedPosition: lastCenterStartingIndex }
-        }
-        if (item.feedType === FeedOptions.Featured) {
-          return {
-            ...item,
-            centers: carouselFeaturedCenters
-              .map((center, index) => ({
-                ...center,
-                positionInItem: index + 1
-              }))
-              .slice(0, MAX_CAROUSEL_FEED_ITEMS),
-            feedPosition: lastCenterStartingIndex
-          }
-        }
         if (!feedSourceHasItems(feedType, feedItems)) {
           return []
         }
@@ -160,7 +122,7 @@ import {
             lastCenterStartingIndex
           )
   
-          let subFeeds: CenterFeedPlacement[][] = []
+          let subFeeds: FeedPlacement[][] = []
           let totalSubFeedLength = 0
   
           if (
@@ -204,7 +166,7 @@ import {
             feed.length
           )
   
-          let subFeeds: CenterFeedPlacement[][] = []
+          let subFeeds: FeedPlacement[][] = []
           let totalSubFeedLength = 0
   
           if (inFeed.inFeedSources && isNonEmptyArray(inFeed.inFeedSources)) {
@@ -250,12 +212,12 @@ import {
   }
   
   export const mapPositionToFeedItems = (
-    feed: CenterFeedPlacement[],
+    feed: FeedPlacement[],
     positionStart: number
   ) =>
     feed.map((item, index) => {
       return { ...item, feedPosition: positionStart + index }
-    }) as CenterFeedPlacement[]
+    }) as FeedPlacement[]
   
   const feedSourceHasItems = (
     feedType: FeedProperty['feedType'],

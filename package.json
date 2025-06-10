@@ -13,9 +13,11 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "lodash": "^4.17.21",
     "typescript": "^5.8.3"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.17",
     "eslint": "^9.28.0",
     "prettier": "^3.5.3"
   }

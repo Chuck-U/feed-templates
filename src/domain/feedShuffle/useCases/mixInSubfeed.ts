@@ -1,5 +1,5 @@
-import { CenterFeedPlacement, FeedProperty } from '@/types/models'
-import { isNonEmptyArray, isNumber } from '../../../utils/checks'
+import { FeedPlacement, FeedProperty } from '../../types/feed.model'
+import { isNonEmptyArray, isNumber } from '../../utils/checks'
 
 const hasRepeatOrPattern = (feedProperty: FeedProperty): boolean =>
   isNumber(feedProperty.inFeed?.repeatEvery) ||
@@ -22,14 +22,14 @@ const useRepeatPattern = (
 }
 
 export const AddItemsToSubFeed = (
-  feed: CenterFeedPlacement[],
-  subFeeds: CenterFeedPlacement[][] | CenterFeedPlacement[] | [],
+  feed: FeedPlacement[],
+  subFeeds: FeedPlacement[][] | FeedPlacement[] | [],
   feedProperty: FeedProperty,
   positionStart: number
 ) => {
   const normalizedSubFeeds = Array.isArray(subFeeds[0])
-    ? (subFeeds as CenterFeedPlacement[][])
-    : [subFeeds as CenterFeedPlacement[]]
+    ? (subFeeds as FeedPlacement[][])
+    : [subFeeds as FeedPlacement[]]
 
   if (
     !isNonEmptyArray(normalizedSubFeeds) ||
@@ -39,7 +39,7 @@ export const AddItemsToSubFeed = (
     return feed
   }
 
-  const parentFeed: CenterFeedPlacement[] = feed
+  const parentFeed: FeedPlacement[] = feed
   const itemsToBeAdded = normalizedSubFeeds
 
   if (isNonEmptyArray(feedProperty.inFeed?.repeatPattern)) {
@@ -53,7 +53,7 @@ export const AddItemsToSubFeed = (
       .sort((a, b) => (a.feedPosition as number) - (b.feedPosition as number))
       .map((item, index) => {
         return { ...item, feedPosition: index + positionStart }
-      }) as CenterFeedPlacement[]
+      }) as FeedPlacement[]
     return feedItems
   }
 
@@ -65,12 +65,12 @@ export const AddItemsToSubFeed = (
   })
     .filter(Boolean)
     .flat()
-    .sort((a: CenterFeedPlacement, b: CenterFeedPlacement) => {
-      return (a.feedPosition as number) - (b.feedPosition as number)
+    .sort((a: FeedPlacement | undefined, b: FeedPlacement | undefined) => {
+      return (a?.feedPosition as number) - (b?.feedPosition as number)
     })
     .map((item, index) => {
       return { ...item, feedPosition: index + positionStart }
-    }) as CenterFeedPlacement[]
+    }) as FeedPlacement[]
   return feedItems
 }
 
@@ -79,8 +79,8 @@ export const addItemsWithRepeatPattern = ({
   subFeeds,
   feedProperty
 }: {
-  feed: CenterFeedPlacement[]
-  subFeeds: CenterFeedPlacement[][]
+  feed: FeedPlacement[]
+  subFeeds: FeedPlacement[][]
   feedProperty: FeedProperty
 }) => {
   if (
@@ -90,7 +90,7 @@ export const addItemsWithRepeatPattern = ({
     return feed
   }
 
-  const parentFeed: CenterFeedPlacement[] = feed
+  const parentFeed: FeedPlacement[] = feed
   const itemsToBeAdded = subFeeds
 
   const { feedType } = feedProperty
@@ -142,9 +142,9 @@ export const addItemsWithRepeatPattern = ({
 }
 
 const getNextAvailableSubFeedItem = (
-  subFeeds: CenterFeedPlacement[][],
+  subFeeds: FeedPlacement[][],
   currentIndex: number
-): { item: CenterFeedPlacement; sourceIndex: number } | null => {
+): { item: FeedPlacement; sourceIndex: number } | null => {
   for (let i = 0; i < subFeeds.length; i++) {
     const index = (currentIndex + i) % subFeeds.length
     if (isNonEmptyArray(subFeeds[index])) {
@@ -163,12 +163,12 @@ export const addItemsToSubFeedWithRepeatEvery = ({
   feedProperty,
   positionStart
 }: {
-  feed: CenterFeedPlacement[]
-  subFeeds: CenterFeedPlacement[][]
+  feed: FeedPlacement[]
+  subFeeds: FeedPlacement[][]
   feedProperty: FeedProperty
   positionStart: number
 }) => {
-  const parentFeed: CenterFeedPlacement[] = [...feed]
+  const parentFeed: FeedPlacement[] = [...feed]
   const { feedType } = feedProperty
   const itemsToBeAdded = subFeeds.map((subFeed) => [...subFeed])
   const totalSubFeedItems = itemsToBeAdded.reduce(
@@ -182,7 +182,7 @@ export const addItemsToSubFeedWithRepeatEvery = ({
   let totalCentersAdded = 0
   let currentSubFeedIndex = 0
   const repeatEvery = feedProperty.inFeed?.repeatEvery as number
-  const feedItems: (CenterFeedPlacement | undefined)[] = []
+  const feedItems: (FeedPlacement | undefined)[] = []
 
   for (let i = 0; i < totalItems; i++) {
     if (
@@ -213,13 +213,13 @@ export const addItemsToSubFeedWithRepeatEvery = ({
         feedItems.push({
           ...parentFeed.shift(),
           feedPosition: i + positionStart || (i as number)
-        } as CenterFeedPlacement)
+        } as FeedPlacement)
       }
     } else if (parentFeed.length > 0) {
       feedItems.push({
         ...parentFeed.shift(),
         feedPosition: i + positionStart || (i as number)
-      } as CenterFeedPlacement)
+      } as FeedPlacement)
     }
   }
   return feedItems

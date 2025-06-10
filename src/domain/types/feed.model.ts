@@ -2,14 +2,14 @@ export enum FeedOptions {
     TOP = 'top',
     ORGANIC = 'organic',
     ADVERT = 'advert',
-    LOCAL = 'local',
     NEARBY = 'nearby',
-    Carousel = 'carousel',
-    Element = 'element',
-    NearbyHeader = 'nearbyHeader',
-    Featured = 'featured'
+    CAROUSEL = 'carousel',
+    ELEMENT = 'element',
+    NEARBY_HEADER = 'nearbyHeader',
+    FEATURED = 'featured'
   }
   
+
   export enum CarouselType {
     Insurance = 'insurance',
     TopLocations = 'topLocations',
@@ -58,21 +58,26 @@ export enum FeedOptions {
 export interface FeedPlacement {
     feedPosition: number
     feedType: FeedOptions
-    item: Record<string, any>
+    item: Item
     placedInFeed: FeedOptions
 }
 
 
   
   export enum FeedItemEnum {
-    local = 'localItems',
-    organic = 'organicItems',
-    nearby = 'nearbyItems',
-    midFeed = 'midFeedAdsItems',
-    featured = 'featuredItems'
+    TOP = 'topItems',
+    ORGANIC = 'organicItems',
+    NEARBY = 'nearbyItems',
+    ADVERT = 'advertItems',
+    FEATURED = 'featuredItems'
   }
   
   export type FeedItems = {
-    [K in FeedItemEnum]: Partial<CenterFeedPlacement>[]
+    [K in FeedItemEnum]: Partial<FeedPlacement>[]
   }
   
+
+  export interface Item {
+    [k: string]: unknown
+    id: number | string
+  }
